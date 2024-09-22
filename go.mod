@@ -1,13 +1,16 @@
-module github.com/hashicorp/terraform-provider-scaffolding-framework
+module github.com/axatol/terraform-provider-kinde
 
-go 1.22.7
+go 1.23.0
 
 require (
+	github.com/axatol/kinde-go v0.0.0-20240922035228-0776ff1f0a4b
 	github.com/hashicorp/terraform-plugin-framework v1.11.0
 	github.com/hashicorp/terraform-plugin-go v0.23.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-testing v1.10.0
 )
+
+replace github.com/axatol/kinde-go => ../kinde-go
 
 require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2 // indirect
@@ -46,7 +49,9 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/oklog/run v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
-	github.com/stretchr/testify v1.8.2 // indirect
+	github.com/tidwall/gjson v1.17.3 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
