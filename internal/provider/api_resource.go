@@ -110,13 +110,10 @@ func (r *APIResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	}
 
 	resource := expandAPIResourceModel(state)
-	params := kinde.GetAPIParams{
-		ID: resource.ID,
-	}
 
-	tflog.Debug(ctx, "Reading API", map[string]any{"params": params})
+	tflog.Debug(ctx, "Reading API", map[string]any{"id": resource.ID})
 
-	resource, err := r.client.GetAPI(ctx, params)
+	resource, err := r.client.GetAPI(ctx, resource.ID)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to get API", err.Error())
 		return
@@ -147,13 +144,10 @@ func (r *APIResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 	}
 
 	resource := expandAPIResourceModel(state)
-	params := kinde.DeleteAPIParams{
-		ID: resource.ID,
-	}
 
-	tflog.Debug(ctx, "Deleting API", map[string]any{"params": params})
+	tflog.Debug(ctx, "Deleting API", map[string]any{"id": resource.ID})
 
-	if err := r.client.DeleteAPI(ctx, params); err != nil {
+	if err := r.client.DeleteAPI(ctx, resource.ID); err != nil {
 		resp.Diagnostics.AddError("Failed to delete API", err.Error())
 		return
 	}
@@ -162,13 +156,9 @@ func (r *APIResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 }
 
 func (r *APIResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	params := kinde.GetAPIParams{
-		ID: req.ID,
-	}
+	tflog.Debug(ctx, "Importing API", map[string]any{"id": req.ID})
 
-	tflog.Debug(ctx, "Importing API", map[string]any{"params": params})
-
-	resource, err := r.client.GetAPI(ctx, params)
+	resource, err := r.client.GetAPI(ctx, req.ID)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to import API", err.Error())
 		return

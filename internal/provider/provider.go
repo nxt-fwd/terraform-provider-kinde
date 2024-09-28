@@ -95,12 +95,14 @@ func (p *KindeProvider) Configure(ctx context.Context, req provider.ConfigureReq
 func (p *KindeProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewAPIResource,
+		NewApplicationResource,
 	}
 }
 
 func (p *KindeProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewAPIDataSource,
+		NewApplicationDataSource,
 	}
 }
 

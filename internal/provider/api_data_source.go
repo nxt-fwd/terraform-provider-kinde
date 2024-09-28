@@ -73,13 +73,10 @@ func (d *APIDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 	}
 
 	resource := expandAPIDataSourceModel(config)
-	params := kinde.GetAPIParams{
-		ID: resource.ID,
-	}
 
-	tflog.Debug(ctx, "Reading API", map[string]any{"params": params})
+	tflog.Debug(ctx, "Reading API", map[string]any{"id": resource.ID})
 
-	resource, err := d.client.GetAPI(ctx, params)
+	resource, err := d.client.GetAPI(ctx, resource.ID)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to get API", err.Error())
 		return
