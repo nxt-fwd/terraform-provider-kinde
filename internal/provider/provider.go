@@ -87,7 +87,8 @@ func (p *KindeProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		opts.WithClientSecret(data.ClientSecret.ValueString())
 	}
 
-	client := kinde.New(ctx, opts)
+	client := &kinde.Client{}
+	*client = kinde.New(ctx, opts)
 	resp.DataSourceData = client
 	resp.ResourceData = client
 }
@@ -96,6 +97,7 @@ func (p *KindeProvider) Resources(ctx context.Context) []func() resource.Resourc
 	return []func() resource.Resource{
 		NewAPIResource,
 		NewApplicationResource,
+		NewOrganizationResource,
 	}
 }
 

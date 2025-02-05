@@ -10,6 +10,8 @@ require (
 	github.com/hashicorp/terraform-plugin-testing v1.10.0
 )
 
+replace github.com/axatol/kinde-go => ../kinde-go
+
 require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect

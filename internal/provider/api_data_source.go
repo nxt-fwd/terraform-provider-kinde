@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/axatol/kinde-go"
+	"github.com/axatol/kinde-go/api/apis"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -20,7 +20,7 @@ func NewAPIDataSource() datasource.DataSource {
 }
 
 type APIDataSource struct {
-	client *kinde.Client
+	client *apis.Client
 }
 
 func (d *APIDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -53,7 +53,7 @@ func (d *APIDataSource) Configure(ctx context.Context, req datasource.ConfigureR
 		return
 	}
 
-	client, ok := req.ProviderData.(*kinde.Client)
+	client, ok := req.ProviderData.(*apis.Client)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
@@ -76,7 +76,7 @@ func (d *APIDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 
 	tflog.Debug(ctx, "Reading API", map[string]any{"id": resource.ID})
 
-	resource, err := d.client.GetAPI(ctx, resource.ID)
+	resource, err := d.client.Get(ctx, resource.ID)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to get API", err.Error())
 		return
