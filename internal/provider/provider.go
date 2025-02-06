@@ -5,8 +5,10 @@ package provider
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/axatol/kinde-go"
+	"github.com/axatol/kinde-go/api/users"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
@@ -89,6 +91,18 @@ func (p *KindeProvider) Configure(ctx context.Context, req provider.ConfigureReq
 
 	client := &kinde.Client{}
 	*client = kinde.New(ctx, opts)
+
+	// Validate credentials by making a test API call
+	_, err := client.Users.List(ctx, users.ListParams{PageSize: 1})
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to Create Kinde Client",
+			fmt.Sprintf("Failed to authenticate with Kinde API: %v\n"+
+				"Please verify your domain, client_id, client_secret, and audience are correct.", err),
+		)
+		return
+	}
+
 	resp.DataSourceData = client
 	resp.ResourceData = client
 }
@@ -98,6 +112,7 @@ func (p *KindeProvider) Resources(ctx context.Context) []func() resource.Resourc
 		NewAPIResource,
 		NewApplicationResource,
 		NewOrganizationResource,
+		NewUserResource,
 	}
 }
 
