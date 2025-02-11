@@ -63,4 +63,4 @@ resource "kinde_role" "test" {
 	description = "Updated test role"
 }
 `, name)
-} 
+}

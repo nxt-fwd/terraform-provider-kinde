@@ -8,14 +8,14 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/nxt-fwd/kinde-go"
-	"github.com/nxt-fwd/kinde-go/api/organizations"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/nxt-fwd/kinde-go"
+	"github.com/nxt-fwd/kinde-go/api/organizations"
 )
 
 var (
@@ -32,9 +32,9 @@ type UserRoleResource struct {
 }
 
 type UserRoleResourceModel struct {
-	ID              types.String `tfsdk:"id"`
-	UserID          types.String `tfsdk:"user_id"`
-	RoleID          types.String `tfsdk:"role_id"`
+	ID               types.String `tfsdk:"id"`
+	UserID           types.String `tfsdk:"user_id"`
+	RoleID           types.String `tfsdk:"role_id"`
 	OrganizationCode types.String `tfsdk:"organization_code"`
 }
 
@@ -102,7 +102,7 @@ func (r *UserRoleResource) Create(ctx context.Context, req resource.CreateReques
 		if strings.Contains(strings.ToLower(err.Error()), "user_not_in_organization") {
 			resp.Diagnostics.AddError(
 				"User Not in Organization",
-				fmt.Sprintf("User %s is not a member of organization %s. Please add the user to the organization before assigning roles.", 
+				fmt.Sprintf("User %s is not a member of organization %s. Please add the user to the organization before assigning roles.",
 					plan.UserID.ValueString(),
 					plan.OrganizationCode.ValueString(),
 				),
@@ -111,7 +111,7 @@ func (r *UserRoleResource) Create(ctx context.Context, req resource.CreateReques
 		}
 		resp.Diagnostics.AddError(
 			"Error Checking User Organization Membership",
-			fmt.Sprintf("Could not verify if user %s is a member of organization %s: %s", 
+			fmt.Sprintf("Could not verify if user %s is a member of organization %s: %s",
 				plan.UserID.ValueString(),
 				plan.OrganizationCode.ValueString(),
 				err,
@@ -125,8 +125,8 @@ func (r *UserRoleResource) Create(ctx context.Context, req resource.CreateReques
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Assigning Role to User",
-			fmt.Sprintf("Could not assign role %s to user %s in organization %s: %s", 
-				plan.RoleID.ValueString(), 
+			fmt.Sprintf("Could not assign role %s to user %s in organization %s: %s",
+				plan.RoleID.ValueString(),
 				plan.UserID.ValueString(),
 				plan.OrganizationCode.ValueString(),
 				err,
@@ -155,7 +155,7 @@ func (r *UserRoleResource) Read(ctx context.Context, req resource.ReadRequest, r
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading User Roles",
-			fmt.Sprintf("Could not read roles for user %s in organization %s: %s", 
+			fmt.Sprintf("Could not read roles for user %s in organization %s: %s",
 				state.UserID.ValueString(),
 				state.OrganizationCode.ValueString(),
 				err,
@@ -202,8 +202,8 @@ func (r *UserRoleResource) Delete(ctx context.Context, req resource.DeleteReques
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Removing Role from User",
-			fmt.Sprintf("Could not remove role %s from user %s in organization %s: %s", 
-				state.RoleID.ValueString(), 
+			fmt.Sprintf("Could not remove role %s from user %s in organization %s: %s",
+				state.RoleID.ValueString(),
 				state.UserID.ValueString(),
 				state.OrganizationCode.ValueString(),
 				err,
@@ -228,4 +228,4 @@ func (r *UserRoleResource) ImportState(ctx context.Context, req resource.ImportS
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("organization_code"), idParts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("user_id"), idParts[1])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("role_id"), idParts[2])...)
-} 
+}

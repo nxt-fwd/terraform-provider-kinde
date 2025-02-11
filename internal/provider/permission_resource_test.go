@@ -53,4 +53,4 @@ resource "kinde_permission" "test" {
   description = %[3]q
 }
 `, name, key, description)
-} 
+}

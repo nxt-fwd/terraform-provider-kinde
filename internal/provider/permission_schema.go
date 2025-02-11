@@ -4,8 +4,8 @@
 package provider
 
 import (
-	"github.com/nxt-fwd/kinde-go/api/permissions"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/nxt-fwd/kinde-go/api/permissions"
 )
 
 type PermissionResourceModel struct {
@@ -13,15 +13,6 @@ type PermissionResourceModel struct {
 	Name        types.String `tfsdk:"name"`
 	Key         types.String `tfsdk:"key"`
 	Description types.String `tfsdk:"description"`
-}
-
-func expandPermissionResourceModel(d PermissionResourceModel) *permissions.Permission {
-	return &permissions.Permission{
-		ID:          d.ID.ValueString(),
-		Name:        d.Name.ValueString(),
-		Key:         d.Key.ValueString(),
-		Description: d.Description.ValueString(),
-	}
 }
 
 func expandPermissionCreateParams(d PermissionResourceModel) permissions.CreateParams {
@@ -56,6 +47,7 @@ type PermissionDataSourceModel struct {
 	Description types.String `tfsdk:"description"`
 }
 
+//nolint:unused
 func expandPermissionDataSourceModel(model PermissionDataSourceModel) *permissions.Permission {
 	return &permissions.Permission{
 		ID:          model.ID.ValueString(),
@@ -65,6 +57,7 @@ func expandPermissionDataSourceModel(model PermissionDataSourceModel) *permissio
 	}
 }
 
+//nolint:unused
 func flattenPermissionDataSource(permission *permissions.Permission) PermissionDataSourceModel {
 	return PermissionDataSourceModel{
 		ID:          types.StringValue(permission.ID),
@@ -72,4 +65,4 @@ func flattenPermissionDataSource(permission *permissions.Permission) PermissionD
 		Key:         types.StringValue(permission.Key),
 		Description: types.StringValue(permission.Description),
 	}
-} 
+}

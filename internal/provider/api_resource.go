@@ -7,14 +7,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nxt-fwd/kinde-go"
-	"github.com/nxt-fwd/kinde-go/api/apis"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/nxt-fwd/kinde-go"
+	"github.com/nxt-fwd/kinde-go/api/apis"
 )
 
 var (
@@ -87,12 +86,13 @@ func (r *APIResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
+	api := expandAPIResourceModel(plan)
 	createParams := apis.CreateParams{
-		Name:     plan.Name.ValueString(),
-		Audience: plan.Audience.ValueString(),
+		Name:     api.Name,
+		Audience: api.Audience,
 	}
 
-	api, err := r.client.Create(ctx, createParams)
+	createdAPI, err := r.client.Create(ctx, createParams)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Creating API",
@@ -101,23 +101,18 @@ func (r *APIResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	plan.ID = types.StringValue(api.ID)
-
 	// Get the created API to populate computed fields
-	api, err = r.client.Get(ctx, api.ID)
+	api, err = r.client.Get(ctx, createdAPI.ID)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading API",
-			fmt.Sprintf("Could not read API ID %s: %s", api.ID, err),
+			fmt.Sprintf("Could not read API ID %s: %s", createdAPI.ID, err),
 		)
 		return
 	}
 
-	plan.Name = types.StringValue(api.Name)
-	plan.Audience = types.StringValue(api.Audience)
-	plan.IsManagementAPI = types.BoolValue(api.IsManagementAPI)
-
-	diags = resp.State.Set(ctx, plan)
+	state := flattenAPIResource(api)
+	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
 }
 
@@ -138,10 +133,7 @@ func (r *APIResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 
-	state.Name = types.StringValue(api.Name)
-	state.Audience = types.StringValue(api.Audience)
-	state.IsManagementAPI = types.BoolValue(api.IsManagementAPI)
-
+	state = flattenAPIResource(api)
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 }

@@ -6,13 +6,13 @@ package provider
 import (
 	"context"
 	"fmt"
-
-	"github.com/nxt-fwd/kinde-go"
-	"github.com/nxt-fwd/kinde-go/api/permissions"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/nxt-fwd/kinde-go"
+	"github.com/nxt-fwd/kinde-go/api/permissions"
 )
 
 var (
@@ -93,6 +93,8 @@ func (r *PermissionResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
+	plan.ID = types.StringValue(permission.ID)
+
 	// After creation, search for the permission to get its full details
 	searchParams := permissions.SearchParams{
 		Name: plan.Name.ValueString(),
@@ -121,27 +123,44 @@ func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	searchParams := permissions.SearchParams{
-		Name: state.Name.ValueString(),
-		Key:  state.Key.ValueString(),
-	}
-
-	permission, err := r.client.Search(ctx, searchParams)
+	// List all permissions with a larger page size
+	perms, err := r.client.List(ctx, permissions.ListParams{
+		PageSize: 100, // Use a larger page size to reduce pagination
+	})
 	if err != nil {
-		if err == permissions.ErrPermissionNotFound {
-			resp.State.RemoveResource(ctx)
-			return
-		}
 		resp.Diagnostics.AddError(
 			"Error Reading Permission",
-			fmt.Sprintf("Could not read permission with name %s and key %s: %s", state.Name.ValueString(), state.Key.ValueString(), err),
+			fmt.Sprintf("Could not list permissions: %s", err),
 		)
 		return
 	}
 
-	state = flattenPermissionResource(permission)
-	diags = resp.State.Set(ctx, &state)
-	resp.Diagnostics.Append(diags...)
+	// First try to find by ID if we have one
+	if !state.ID.IsNull() {
+		for _, p := range perms {
+			if p.ID == state.ID.ValueString() {
+				state = flattenPermissionResource(&p)
+				diags = resp.State.Set(ctx, &state)
+				resp.Diagnostics.Append(diags...)
+				return
+			}
+		}
+	}
+
+	// If we couldn't find by ID, try to find by name and key
+	if !state.Name.IsNull() && !state.Key.IsNull() {
+		for _, p := range perms {
+			if p.Name == state.Name.ValueString() && p.Key == state.Key.ValueString() {
+				state = flattenPermissionResource(&p)
+				diags = resp.State.Set(ctx, &state)
+				resp.Diagnostics.Append(diags...)
+				return
+			}
+		}
+	}
+
+	// If we couldn't find the permission, remove it from state
+	resp.State.RemoveResource(ctx)
 }
 
 func (r *PermissionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -190,8 +209,7 @@ func (r *PermissionResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	err := r.client.Delete(ctx, state.ID.ValueString())
-	if err != nil {
+	if err := r.client.Delete(ctx, state.ID.ValueString()); err != nil {
 		resp.Diagnostics.AddError(
 			"Error Deleting Permission",
 			fmt.Sprintf("Could not delete permission ID %s: %s", state.ID.ValueString(), err),
@@ -201,35 +219,29 @@ func (r *PermissionResource) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 func (r *PermissionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// Search for the permission by ID
-	perms, err := r.client.List(ctx, permissions.ListParams{})
+	// List all permissions with a larger page size to reduce API calls
+	perms, err := r.client.List(ctx, permissions.ListParams{
+		PageSize: 100, // Use a larger page size to reduce pagination
+	})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Permission",
-			"Could not list permissions: "+err.Error(),
+			fmt.Sprintf("Could not list permissions: %s", err),
 		)
 		return
 	}
 
-	// Find the permission with the matching ID
-	var permission *permissions.Permission
+	// Find the permission by ID
 	for _, p := range perms {
 		if p.ID == req.ID {
-			perm := p // Create a new variable to avoid issues with loop variable capture
-			permission = &perm
-			break
+			state := flattenPermissionResource(&p)
+			resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+			return
 		}
 	}
 
-	if permission == nil {
-		resp.Diagnostics.AddError(
-			"Error Reading Permission",
-			"Could not find permission with ID "+req.ID,
-		)
-		return
-	}
-
-	// Set the state
-	state := flattenPermissionResource(permission)
-	resp.State.Set(ctx, &state)
+	resp.Diagnostics.AddError(
+		"Error Reading Permission",
+		fmt.Sprintf("Could not find permission with ID %s", req.ID),
+	)
 }

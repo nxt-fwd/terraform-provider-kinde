@@ -7,13 +7,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nxt-fwd/kinde-go"
-	"github.com/nxt-fwd/kinde-go/api/roles"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/nxt-fwd/kinde-go"
+	"github.com/nxt-fwd/kinde-go/api/roles"
 )
 
 var (
@@ -212,6 +212,9 @@ func (r *RoleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
+	plan.Name = types.StringValue(role.Name)
+	plan.Description = types.StringValue(role.Description)
+
 	// Update permissions if they've changed
 	var permissions []string
 	if !plan.Permissions.IsNull() {
@@ -274,8 +277,7 @@ func (r *RoleResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return
 	}
 
-	err := r.client.Delete(ctx, state.ID.ValueString())
-	if err != nil {
+	if err := r.client.Delete(ctx, state.ID.ValueString()); err != nil {
 		resp.Diagnostics.AddError(
 			"Error Deleting Role",
 			fmt.Sprintf("Could not delete role ID %s: %s", state.ID.ValueString(), err),
@@ -304,4 +306,4 @@ func (r *RoleResource) ImportState(ctx context.Context, req resource.ImportState
 	}
 
 	resp.State.Set(ctx, &state)
-} 
+}

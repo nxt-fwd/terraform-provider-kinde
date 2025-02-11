@@ -4,8 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nxt-fwd/kinde-go"
-	"github.com/nxt-fwd/kinde-go/api/users"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -13,7 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/nxt-fwd/kinde-go"
+	"github.com/nxt-fwd/kinde-go/api/users"
 )
 
 var (
@@ -30,14 +30,14 @@ type UserResource struct {
 }
 
 type UserResourceModel struct {
-	ID              types.String `tfsdk:"id"`
-	FirstName       types.String `tfsdk:"first_name"`
-	LastName        types.String `tfsdk:"last_name"`
-	IsSuspended     types.Bool   `tfsdk:"is_suspended"`
+	ID               types.String `tfsdk:"id"`
+	FirstName        types.String `tfsdk:"first_name"`
+	LastName         types.String `tfsdk:"last_name"`
+	IsSuspended      types.Bool   `tfsdk:"is_suspended"`
 	OrganizationCode types.String `tfsdk:"organization_code"`
-	CreatedOn       types.String `tfsdk:"created_on"`
-	UpdatedOn       types.String `tfsdk:"updated_on"`
-	Identities      types.List   `tfsdk:"identities"`
+	CreatedOn        types.String `tfsdk:"created_on"`
+	UpdatedOn        types.String `tfsdk:"updated_on"`
+	Identities       types.List   `tfsdk:"identities"`
 }
 
 func (r *UserResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -207,7 +207,7 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 		updateParams := users.UpdateParams{
 			IsSuspended: &isSuspended,
 		}
-		
+
 		user, err = r.client.Update(ctx, user.ID, updateParams)
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -297,10 +297,8 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	state.UpdatedOn = types.StringValue(user.UpdatedOn.String())
 	state.Identities = identitiesList
 
-	// Preserve organization_code from state as it's not returned by the API
-	if !state.OrganizationCode.IsNull() {
-		state.OrganizationCode = state.OrganizationCode
-	}
+	// Organization code is preserved from state as it's not returned by the API
+	// No action needed as the value is already in state.OrganizationCode
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -401,16 +399,6 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	// After update, get the full user details to ensure we have the latest state
-	user, err = r.client.Get(ctx, plan.ID.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Reading Updated User",
-			fmt.Sprintf("Could not read updated user ID %s: %s", plan.ID.ValueString(), err),
-		)
-		return
-	}
-
 	plan.FirstName = types.StringValue(user.FirstName)
 	plan.LastName = types.StringValue(user.LastName)
 	plan.IsSuspended = types.BoolValue(user.IsSuspended)
@@ -428,8 +416,7 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return
 	}
 
-	err := r.client.Delete(ctx, state.ID.ValueString())
-	if err != nil {
+	if err := r.client.Delete(ctx, state.ID.ValueString()); err != nil {
 		resp.Diagnostics.AddError(
 			"Error Deleting User",
 			fmt.Sprintf("Could not delete user ID %s: %s", state.ID.ValueString(), err),
@@ -440,4 +427,4 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 func (r *UserResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-} 
+}

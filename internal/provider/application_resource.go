@@ -7,9 +7,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nxt-fwd/kinde-go"
-	"github.com/nxt-fwd/kinde-go/api/applications"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -17,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/nxt-fwd/kinde-go"
+	"github.com/nxt-fwd/kinde-go/api/applications"
 )
 
 var (
@@ -185,10 +184,10 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 	// Only update if any of the optional fields are set
 	if !plan.LoginURI.IsNull() || !plan.HomepageURI.IsNull() || len(logoutURIs) > 0 || len(redirectURIs) > 0 {
 		tflog.Debug(ctx, "Updating application with additional settings", map[string]interface{}{
-			"id":            app.ID,
-			"has_login":     !plan.LoginURI.IsNull(),
-			"has_homepage":  !plan.HomepageURI.IsNull(),
-			"logout_count":  len(logoutURIs),
+			"id":             app.ID,
+			"has_login":      !plan.LoginURI.IsNull(),
+			"has_homepage":   !plan.HomepageURI.IsNull(),
+			"logout_count":   len(logoutURIs),
 			"redirect_count": len(redirectURIs),
 		})
 
@@ -265,15 +264,6 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
-}
-
-// Helper function to convert string slice to []attr.Value
-func listValuesFromStrings(strings []string) []attr.Value {
-	values := make([]attr.Value, len(strings))
-	for i, s := range strings {
-		values[i] = types.StringValue(s)
-	}
-	return values
 }
 
 func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

@@ -9,7 +9,7 @@ import (
 )
 
 func TestAccOrganizationResource(t *testing.T) {
-	testID := acctest.RandomWithPrefix("tfacc-")
+	testName := acctest.RandomWithPrefix("tfacc")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -17,10 +17,10 @@ func TestAccOrganizationResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccOrganizationResourceConfig(testID),
+				Config: testAccOrganizationResourceConfig(testName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("kinde_organization.test", "name", testID),
-					resource.TestCheckResourceAttr("kinde_organization.test", "code", testID),
+					resource.TestCheckResourceAttr("kinde_organization.test", "name", testName),
+					resource.TestCheckResourceAttrSet("kinde_organization.test", "code"),
 					resource.TestCheckResourceAttrSet("kinde_organization.test", "id"),
 					resource.TestCheckResourceAttrSet("kinde_organization.test", "created_on"),
 				),
@@ -33,10 +33,10 @@ func TestAccOrganizationResource(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccOrganizationResourceConfigUpdate(testID),
+				Config: testAccOrganizationResourceConfigUpdate(testName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("kinde_organization.test", "name", testID+"-updated"),
-					resource.TestCheckResourceAttr("kinde_organization.test", "code", testID),
+					resource.TestCheckResourceAttr("kinde_organization.test", "name", testName+"-updated"),
+					resource.TestCheckResourceAttrSet("kinde_organization.test", "code"),
 				),
 			},
 			// Delete testing automatically occurs in TestCase
@@ -48,7 +48,6 @@ func testAccOrganizationResourceConfig(name string) string {
 	return fmt.Sprintf(`
 resource "kinde_organization" "test" {
 	name = %[1]q
-	code = %[1]q
 }
 `, name)
 }
@@ -57,7 +56,6 @@ func testAccOrganizationResourceConfigUpdate(name string) string {
 	return fmt.Sprintf(`
 resource "kinde_organization" "test" {
 	name = "%[1]s-updated"
-	code = %[1]q
 }
 `, name)
-} 
+}

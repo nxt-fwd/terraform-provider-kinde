@@ -4,20 +4,21 @@
 package provider
 
 import (
-	"github.com/nxt-fwd/kinde-go/api/organizations"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"context"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/nxt-fwd/kinde-go/api/organizations"
 )
 
 type OrganizationUserResourceModel struct {
-	ID              types.String `tfsdk:"id"`
+	ID               types.String `tfsdk:"id"`
 	OrganizationCode types.String `tfsdk:"organization_code"`
-	UserID          types.String `tfsdk:"user_id"`
-	Roles           types.List   `tfsdk:"roles"`
-	Permissions     types.List   `tfsdk:"permissions"`
+	UserID           types.String `tfsdk:"user_id"`
+	Roles            types.List   `tfsdk:"roles"`
+	Permissions      types.List   `tfsdk:"permissions"`
 }
 
-func expandOrganizationUserResourceModel(data OrganizationUserResourceModel) organizations.AddUser {
+//nolint:unused
+func expandOrganizationUserModel(data OrganizationUserResourceModel) organizations.AddUser {
 	var roles []string
 	if !data.Roles.IsNull() {
 		data.Roles.ElementsAs(context.TODO(), &roles, false)
@@ -35,10 +36,11 @@ func expandOrganizationUserResourceModel(data OrganizationUserResourceModel) org
 	}
 }
 
+//nolint:unused
 func expandOrganizationUserParams(data OrganizationUserResourceModel) organizations.AddUsersParams {
 	return organizations.AddUsersParams{
 		Users: []organizations.AddUser{
-			expandOrganizationUserResourceModel(data),
+			expandOrganizationUserModel(data),
 		},
 	}
-} 
+}

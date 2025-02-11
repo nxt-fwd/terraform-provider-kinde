@@ -7,10 +7,10 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.23.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-testing v1.10.0
-	github.com/nxt-fwd/kinde-go v0.0.6
+	github.com/nxt-fwd/kinde-go v0.0.6-0.20250211142554-304d9ed2c35b
 )
 
-replace github.com/nxt-fwd/kinde-go => ../kinde-go
+// replace github.com/nxt-fwd/kinde-go => ../kinde-go
 
 require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2 // indirect

@@ -29,7 +29,6 @@ func main() {
 
 	opts := providerserver.ServeOpts{
 		Address: "registry.terraform.io/nxt-fwd/kinde",
-		// Address: "registry.terraform.io/axatol/kinde",
 		Debug:   debug,
 	}
 

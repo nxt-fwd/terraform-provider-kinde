@@ -4,8 +4,8 @@
 package provider
 
 import (
-	"github.com/nxt-fwd/kinde-go/api/apis"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/nxt-fwd/kinde-go/api/apis"
 )
 
 type APIResourceModel struct {

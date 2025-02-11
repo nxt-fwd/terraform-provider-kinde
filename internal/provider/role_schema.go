@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/nxt-fwd/kinde-go/api/roles"
 	"github.com/nxt-fwd/terraform-provider-kinde/internal/serde"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 type RoleResourceModel struct {
@@ -20,6 +20,7 @@ type RoleResourceModel struct {
 	Permissions types.List   `tfsdk:"permissions"`
 }
 
+//nolint:unused
 func expandRoleResourceModel(data RoleResourceModel) roles.Role {
 	return roles.Role{
 		ID:          data.ID.ValueString(),
@@ -68,6 +69,7 @@ type RoleDataSourceModel struct {
 	Permissions types.List   `tfsdk:"permissions"`
 }
 
+//nolint:unused
 func expandRoleDataSourceModel(model RoleDataSourceModel) *roles.Role {
 	return &roles.Role{
 		ID:          model.ID.ValueString(),
@@ -77,6 +79,7 @@ func expandRoleDataSourceModel(model RoleDataSourceModel) *roles.Role {
 	}
 }
 
+//nolint:unused
 func flattenRoleDataSource(ctx context.Context, resource *roles.Role, permissions []string) (RoleDataSourceModel, error) {
 	permissionsList, diags := serde.FlattenStringList(ctx, permissions)
 	if diags.HasError() {
@@ -90,4 +93,4 @@ func flattenRoleDataSource(ctx context.Context, resource *roles.Role, permission
 		Description: types.StringValue(resource.Description),
 		Permissions: permissionsList,
 	}, nil
-} 
+}

@@ -22,11 +22,6 @@ func TestAccIntegrationBasicWorkflow(t *testing.T) {
 			{
 				Config: testAccIntegrationBasicConfig(testID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					// Organization checks
-					resource.TestCheckResourceAttr("kinde_organization.test", "name", testID),
-					resource.TestCheckResourceAttrSet("kinde_organization.test", "code"),
-					resource.TestCheckResourceAttrSet("kinde_organization.test", "id"),
-
 					// Permission checks
 					resource.TestCheckResourceAttr("kinde_permission.test", "name", testID+"-permission"),
 					resource.TestCheckResourceAttr("kinde_permission.test", "key", testID+"_permission"),
@@ -36,6 +31,11 @@ func TestAccIntegrationBasicWorkflow(t *testing.T) {
 					resource.TestCheckResourceAttr("kinde_role.test", "name", testID+"-role"),
 					resource.TestCheckResourceAttr("kinde_role.test", "key", testID+"_role"),
 					resource.TestCheckResourceAttrSet("kinde_role.test", "id"),
+
+					// Organization checks
+					resource.TestCheckResourceAttr("kinde_organization.test", "name", testID),
+					resource.TestCheckResourceAttrSet("kinde_organization.test", "code"),
+					resource.TestCheckResourceAttrSet("kinde_organization.test", "id"),
 
 					// User checks
 					resource.TestCheckResourceAttr("kinde_user.test", "first_name", "Test"),
@@ -48,15 +48,6 @@ func TestAccIntegrationBasicWorkflow(t *testing.T) {
 			},
 			// Step 2: Import testing for each resource
 			{
-				ResourceName:            "kinde_organization.test",
-				ImportState:            true,
-				ImportStateVerify:      true,
-				ImportStateVerifyIgnore: []string{
-					"created_on",  // Ignore timestamp fields
-					"theme_code",  // Ignore theme code as it's set by the API
-				},
-			},
-			{
 				ResourceName:      "kinde_permission.test",
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -67,7 +58,21 @@ func TestAccIntegrationBasicWorkflow(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
+				ResourceName:      "kinde_organization.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"created_on", // Ignore timestamp fields
+					"theme_code", // Ignore theme code as it's set by the API
+				},
+			},
+			{
 				ResourceName:      "kinde_user.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      "kinde_organization_user.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -75,15 +80,15 @@ func TestAccIntegrationBasicWorkflow(t *testing.T) {
 			{
 				Config: testAccIntegrationBasicConfigUpdate(testID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					// Organization checks
-					resource.TestCheckResourceAttr("kinde_organization.test", "name", testID+"-updated"),
-					
 					// Permission checks
 					resource.TestCheckResourceAttr("kinde_permission.test", "name", testID+"-permission-updated"),
-					
+
 					// Role checks
 					resource.TestCheckResourceAttr("kinde_role.test", "name", testID+"-role-updated"),
-					
+
+					// Organization checks
+					resource.TestCheckResourceAttr("kinde_organization.test", "name", testID+"-updated"),
+
 					// User checks
 					resource.TestCheckResourceAttr("kinde_user.test", "first_name", "Updated"),
 					resource.TestCheckResourceAttr("kinde_user.test", "last_name", "User"),
@@ -233,12 +238,6 @@ resource "kinde_permission" "first" {
 	description = "First test permission"
 }
 
-resource "kinde_permission" "second" {
-	name = "%[1]s-permission2"
-	key  = "%[1]s_permission2"
-	description = "Second test permission"
-}
-
 resource "kinde_permission" "third" {
 	name = "%[1]s-permission3"
 	key  = "%[1]s_permission3"
@@ -354,6 +353,134 @@ resource "kinde_organization_user" "second" {
 	organization_code = kinde_organization.second.code
 	user_id          = kinde_user.multi_org.id
 	roles            = []
+}
+`, name)
+}
+
+func TestAccIntegrationApplicationWorkflow(t *testing.T) {
+	testID := acctest.RandomWithPrefix("tfacc-")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Create application with minimal configuration
+			{
+				Config: testAccIntegrationAppConfig(testID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					// Basic attributes
+					resource.TestCheckResourceAttr("kinde_application.test", "name", testID+"-app"),
+					resource.TestCheckResourceAttr("kinde_application.test", "type", "reg"),
+					resource.TestCheckResourceAttrSet("kinde_application.test", "id"),
+					resource.TestCheckResourceAttrSet("kinde_application.test", "client_id"),
+					resource.TestCheckResourceAttrSet("kinde_application.test", "client_secret"),
+				),
+			},
+			// Step 2: Import testing
+			{
+				ResourceName:      "kinde_application.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Client secret is sensitive and not returned by the API during import
+				ImportStateVerifyIgnore: []string{"client_secret"},
+			},
+			// Step 3: Update with URIs
+			{
+				Config: testAccIntegrationAppConfigUpdate(testID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("kinde_application.test", "name", testID+"-app-updated"),
+					resource.TestCheckResourceAttr("kinde_application.test", "type", "reg"),
+					resource.TestCheckResourceAttr("kinde_application.test", "login_uri", "https://example.com/login"),
+					resource.TestCheckResourceAttr("kinde_application.test", "homepage_uri", "https://example.com"),
+					resource.TestCheckResourceAttr("kinde_application.test", "logout_uris.#", "1"),
+					resource.TestCheckResourceAttr("kinde_application.test", "logout_uris.0", "https://example.com/logout"),
+					resource.TestCheckResourceAttr("kinde_application.test", "redirect_uris.#", "2"),
+					resource.TestCheckResourceAttr("kinde_application.test", "redirect_uris.0", "https://example.com/callback"),
+					resource.TestCheckResourceAttr("kinde_application.test", "redirect_uris.1", "https://example.com/callback2"),
+				),
+			},
+		},
+	})
+}
+
+func testAccIntegrationAppConfig(name string) string {
+	return fmt.Sprintf(`
+resource "kinde_application" "test" {
+	name = "%[1]s-app"
+	type = "reg"
+}
+`, name)
+}
+
+func testAccIntegrationAppConfigUpdate(name string) string {
+	return fmt.Sprintf(`
+resource "kinde_application" "test" {
+	name         = "%[1]s-app-updated"
+	type         = "reg"
+	login_uri    = "https://example.com/login"
+	homepage_uri = "https://example.com"
+	logout_uris  = ["https://example.com/logout"]
+	redirect_uris = [
+		"https://example.com/callback",
+		"https://example.com/callback2"
+	]
+}
+`, name)
+}
+
+func TestAccIntegrationM2MApplicationWorkflow(t *testing.T) {
+	testID := acctest.RandomWithPrefix("tfacc-")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Create M2M application
+			{
+				Config: testAccIntegrationM2MAppConfig(testID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					// Basic attributes
+					resource.TestCheckResourceAttr("kinde_application.m2m", "name", testID+"-m2m"),
+					resource.TestCheckResourceAttr("kinde_application.m2m", "type", "m2m"),
+					resource.TestCheckResourceAttrSet("kinde_application.m2m", "id"),
+					resource.TestCheckResourceAttrSet("kinde_application.m2m", "client_id"),
+					resource.TestCheckResourceAttrSet("kinde_application.m2m", "client_secret"),
+				),
+			},
+			// Step 2: Import testing
+			{
+				ResourceName:      "kinde_application.m2m",
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Client secret is sensitive and not returned by the API during import
+				ImportStateVerifyIgnore: []string{"client_secret"},
+			},
+			// Step 3: Update name (other fields require replacement)
+			{
+				Config: testAccIntegrationM2MAppConfigUpdate(testID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("kinde_application.m2m", "name", testID+"-m2m-updated"),
+					resource.TestCheckResourceAttr("kinde_application.m2m", "type", "m2m"),
+				),
+			},
+		},
+	})
+}
+
+func testAccIntegrationM2MAppConfig(name string) string {
+	return fmt.Sprintf(`
+resource "kinde_application" "m2m" {
+	name = "%[1]s-m2m"
+	type = "m2m"
+}
+`, name)
+}
+
+func testAccIntegrationM2MAppConfigUpdate(name string) string {
+	return fmt.Sprintf(`
+resource "kinde_application" "m2m" {
+	name = "%[1]s-m2m-updated"
+	type = "m2m"
 }
 `, name)
 }

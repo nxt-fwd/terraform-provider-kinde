@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/nxt-fwd/kinde-go"
-	"github.com/nxt-fwd/kinde-go/api/organizations"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/nxt-fwd/kinde-go"
+	"github.com/nxt-fwd/kinde-go/api/organizations"
 )
 
 var (
@@ -58,7 +58,6 @@ func (r *OrganizationResource) Schema(_ context.Context, _ resource.SchemaReques
 			},
 			"code": schema.StringAttribute{
 				Description: "The organization code.",
-				Optional:    true,
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -162,7 +161,6 @@ func (r *OrganizationResource) Create(ctx context.Context, req resource.CreateRe
 
 	createParams := organizations.CreateParams{
 		Name:   plan.Name.ValueString(),
-		Code:   plan.Code.ValueString(),
 		Handle: plan.Handle.ValueString(),
 	}
 
@@ -461,4 +459,4 @@ func (r *OrganizationResource) ImportState(ctx context.Context, req resource.Imp
 	// Set the state
 	diags := resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
-} 
+}

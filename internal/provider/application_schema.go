@@ -6,10 +6,10 @@ package provider
 import (
 	"context"
 
-	"github.com/nxt-fwd/kinde-go/api/applications"
-	"github.com/nxt-fwd/terraform-provider-kinde/internal/serde"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/nxt-fwd/kinde-go/api/applications"
+	"github.com/nxt-fwd/terraform-provider-kinde/internal/serde"
 )
 
 type ApplicationResourceModel struct {
@@ -24,6 +24,7 @@ type ApplicationResourceModel struct {
 	RedirectURIs types.List   `tfsdk:"redirect_uris"`
 }
 
+//nolint:unused
 func expandApplicationResourceModel(data ApplicationResourceModel) applications.Application {
 	return applications.Application{
 		ID:           data.ID.ValueString(),
@@ -34,7 +35,8 @@ func expandApplicationResourceModel(data ApplicationResourceModel) applications.
 	}
 }
 
-func expandApplicationUpdateResourceModel(ctx context.Context, data ApplicationResourceModel) (applications.UpdateParams, error) {
+//nolint:unused
+func expandApplicationUpdateResourceModel(ctx context.Context, data ApplicationResourceModel) applications.UpdateParams {
 	var logoutURIs []string
 	if !data.LogoutURIs.IsNull() {
 		data.LogoutURIs.ElementsAs(ctx, &logoutURIs, false)
@@ -51,9 +53,10 @@ func expandApplicationUpdateResourceModel(ctx context.Context, data ApplicationR
 		HomepageURI:  data.HomepageURI.ValueString(),
 		LogoutURIs:   logoutURIs,
 		RedirectURIs: redirectURIs,
-	}, nil
+	}
 }
 
+//nolint:unused
 func flattenApplicationResource(ctx context.Context, resource *applications.Application, params applications.UpdateParams) (ApplicationResourceModel, diag.Diagnostics) {
 	model := ApplicationResourceModel{
 		ID:           types.StringValue(resource.ID),
@@ -84,6 +87,7 @@ type ApplicationDataSourceModel struct {
 	ClientSecret types.String `tfsdk:"client_secret"`
 }
 
+//nolint:unused
 func expandApplicationDataSourceModel(model ApplicationDataSourceModel) *applications.Application {
 	return &applications.Application{
 		ID:           model.ID.ValueString(),
@@ -94,6 +98,7 @@ func expandApplicationDataSourceModel(model ApplicationDataSourceModel) *applica
 	}
 }
 
+//nolint:unused
 func flattenApplicationDataSource(resource *applications.Application) ApplicationDataSourceModel {
 	return ApplicationDataSourceModel{
 		ID:           types.StringValue(resource.ID),
