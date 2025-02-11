@@ -16,12 +16,17 @@ func TestAccApplicationDataSource(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: `
+				resource "kinde_application" "test" {
+					name = "Terraform Acceptance Example Application"
+					type = "reg"
+				}
+
 				data "kinde_application" "test" {
-					id = "f61f05b791e142dcb44f113b54b2eee6"
+					id = kinde_application.test.id
 				}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.kinde_application.test", "id", "f61f05b791e142dcb44f113b54b2eee6"),
+					resource.TestCheckResourceAttrSet("data.kinde_application.test", "id"),
 					resource.TestCheckResourceAttr("data.kinde_application.test", "name", "Terraform Acceptance Example Application"),
 					resource.TestCheckResourceAttr("data.kinde_application.test", "type", "reg"),
 				),

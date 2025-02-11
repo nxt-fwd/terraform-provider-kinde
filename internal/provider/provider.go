@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/axatol/kinde-go"
-	"github.com/axatol/kinde-go/api/users"
+	"github.com/nxt-fwd/kinde-go"
+	"github.com/nxt-fwd/kinde-go/api/users"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
@@ -77,20 +77,19 @@ func (p *KindeProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		opts.WithDomain(data.Domain.ValueString())
 	}
 
-	if !data.Audience.IsNull() && !data.Domain.IsUnknown() {
+	if !data.Audience.IsNull() && !data.Audience.IsUnknown() {
 		opts.WithAudience(data.Audience.ValueString())
 	}
 
-	if !data.ClientID.IsNull() && !data.Domain.IsUnknown() {
+	if !data.ClientID.IsNull() && !data.ClientID.IsUnknown() {
 		opts.WithClientID(data.ClientID.ValueString())
 	}
 
-	if !data.ClientSecret.IsNull() && !data.Domain.IsUnknown() {
+	if !data.ClientSecret.IsNull() && !data.ClientSecret.IsUnknown() {
 		opts.WithClientSecret(data.ClientSecret.ValueString())
 	}
 
-	client := &kinde.Client{}
-	*client = kinde.New(ctx, opts)
+	client := kinde.New(ctx, opts)
 
 	// Validate credentials by making a test API call
 	_, err := client.Users.List(ctx, users.ListParams{PageSize: 1})
@@ -103,8 +102,8 @@ func (p *KindeProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		return
 	}
 
-	resp.DataSourceData = client
-	resp.ResourceData = client
+	resp.DataSourceData = &client
+	resp.ResourceData = &client
 }
 
 func (p *KindeProvider) Resources(ctx context.Context) []func() resource.Resource {
@@ -112,7 +111,11 @@ func (p *KindeProvider) Resources(ctx context.Context) []func() resource.Resourc
 		NewAPIResource,
 		NewApplicationResource,
 		NewOrganizationResource,
+		NewOrganizationUserResource,
+		NewRoleResource,
 		NewUserResource,
+		NewPermissionResource,
+		NewUserRoleResource,
 	}
 }
 

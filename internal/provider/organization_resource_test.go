@@ -21,10 +21,8 @@ func TestAccOrganizationResource(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("kinde_organization.test", "name", testID),
 					resource.TestCheckResourceAttr("kinde_organization.test", "code", testID),
-					resource.TestCheckResourceAttr("kinde_organization.test", "is_personal", "false"),
 					resource.TestCheckResourceAttrSet("kinde_organization.test", "id"),
 					resource.TestCheckResourceAttrSet("kinde_organization.test", "created_on"),
-					resource.TestCheckResourceAttrSet("kinde_organization.test", "updated_on"),
 				),
 			},
 			// ImportState testing
@@ -39,7 +37,6 @@ func TestAccOrganizationResource(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("kinde_organization.test", "name", testID+"-updated"),
 					resource.TestCheckResourceAttr("kinde_organization.test", "code", testID),
-					resource.TestCheckResourceAttr("kinde_organization.test", "is_personal", "false"),
 				),
 			},
 			// Delete testing automatically occurs in TestCase

@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/axatol/kinde-go"
-	"github.com/axatol/kinde-go/api/applications"
+	"github.com/nxt-fwd/kinde-go"
+	"github.com/nxt-fwd/kinde-go/api/applications"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -96,7 +96,6 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 
 func (r *ApplicationResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
-		tflog.Debug(ctx, "No provider data available")
 		return
 	}
 

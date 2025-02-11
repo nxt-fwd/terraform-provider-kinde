@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/axatol/kinde-go"
-	"github.com/axatol/kinde-go/api/apis"
+	"github.com/nxt-fwd/kinde-go"
+	"github.com/nxt-fwd/kinde-go/api/apis"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -53,6 +53,10 @@ func (r *APIResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 				MarkdownDescription: "Audience of the API",
 				Required:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
+			},
+			"is_management_api": schema.BoolAttribute{
+				MarkdownDescription: "Whether this API is a management API",
+				Computed:            true,
 			},
 		},
 	}

@@ -4,7 +4,7 @@
 package provider
 
 import (
-	"github.com/axatol/kinde-go/api/apis"
+	"github.com/nxt-fwd/kinde-go/api/apis"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 

@@ -7,7 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/axatol/kinde-go/api/apis"
+	"github.com/nxt-fwd/kinde-go"
+	"github.com/nxt-fwd/kinde-go/api/apis"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -53,17 +54,16 @@ func (d *APIDataSource) Configure(ctx context.Context, req datasource.ConfigureR
 		return
 	}
 
-	client, ok := req.ProviderData.(*apis.Client)
+	client, ok := req.ProviderData.(*kinde.Client)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *kinde.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 
-	d.client = client
+	d.client = client.APIs
 }
 
 func (d *APIDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

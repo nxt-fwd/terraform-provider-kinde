@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/axatol/kinde-go"
-	"github.com/axatol/kinde-go/api/applications"
+	"github.com/nxt-fwd/kinde-go"
+	"github.com/nxt-fwd/kinde-go/api/applications"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"

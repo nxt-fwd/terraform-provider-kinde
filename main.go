@@ -8,8 +8,8 @@ import (
 	"flag"
 	"log"
 
-	"github.com/axatol/terraform-provider-kinde/internal/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+	"github.com/nxt-fwd/terraform-provider-kinde/internal/provider"
 )
 
 var (
@@ -28,7 +28,8 @@ func main() {
 	flag.Parse()
 
 	opts := providerserver.ServeOpts{
-		Address: "registry.terraform.io/axatol/kinde",
+		Address: "registry.terraform.io/nxt-fwd/kinde",
+		// Address: "registry.terraform.io/axatol/kinde",
 		Debug:   debug,
 	}
 

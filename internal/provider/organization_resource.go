@@ -3,10 +3,10 @@ package provider
 import (
 	"context"
 	"fmt"
+	"time"
 
-	"github.com/axatol/kinde-go"
-	"github.com/axatol/kinde-go/api/organizations"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/nxt-fwd/kinde-go"
+	"github.com/nxt-fwd/kinde-go/api/organizations"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -28,6 +28,7 @@ type OrganizationResource struct {
 }
 
 type OrganizationResourceModel struct {
+	ID              types.String `tfsdk:"id"`
 	Code            types.String `tfsdk:"code"`
 	Name            types.String `tfsdk:"name"`
 	ExternalID      types.String `tfsdk:"external_id"`
@@ -48,6 +49,13 @@ func (r *OrganizationResource) Schema(_ context.Context, _ resource.SchemaReques
 	resp.Schema = schema.Schema{
 		Description: "Manages a Kinde organization.",
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Description: "The unique identifier of the organization.",
+				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"code": schema.StringAttribute{
 				Description: "The organization code.",
 				Optional:    true,
@@ -167,19 +175,26 @@ func (r *OrganizationResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	// Set values from API response
-	if organization.Code != "" {
-		plan.Code = types.StringValue(organization.Code)
-	}
-	if organization.Name != "" {
-		plan.Name = types.StringValue(organization.Name)
-	} else {
-		// Fallback to plan value if API doesn't return it
-		plan.Name = types.StringValue(createParams.Name)
+	// Get the created organization to ensure we have all fields
+	organization, err = r.client.Get(ctx, organization.Code)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Organization",
+			fmt.Sprintf("Could not read organization code %s: %s", organization.Code, err),
+		)
+		return
 	}
 
-	// Always set computed values, even if empty
-	plan.CreatedOn = types.StringValue(organization.CreatedOn)
+	// Set values from API response
+	if createParams.Code != "" {
+		plan.Code = types.StringValue(createParams.Code)
+		plan.ID = types.StringValue(createParams.Code)
+	} else {
+		plan.Code = types.StringValue(organization.Code)
+		plan.ID = types.StringValue(organization.Code)
+	}
+	plan.Name = types.StringValue(organization.Name)
+	plan.CreatedOn = types.StringValue(organization.CreatedOn.Format(time.RFC3339))
 	plan.ThemeCode = types.StringValue(organization.ColorScheme)
 
 	// Handle optional values
@@ -245,8 +260,9 @@ func (r *OrganizationResource) Read(ctx context.Context, req resource.ReadReques
 
 	// Set known values
 	state.Code = types.StringValue(organization.Code)
+	state.ID = types.StringValue(organization.Code)
 	state.Name = types.StringValue(organization.Name)
-	state.CreatedOn = types.StringValue(organization.CreatedOn)
+	state.CreatedOn = types.StringValue(organization.CreatedOn.Format(time.RFC3339))
 	state.ThemeCode = types.StringValue(organization.ColorScheme)
 
 	// Handle optional values
@@ -320,8 +336,9 @@ func (r *OrganizationResource) Update(ctx context.Context, req resource.UpdateRe
 
 	// Set known values
 	plan.Code = types.StringValue(organization.Code)
+	plan.ID = types.StringValue(organization.Code)
 	plan.Name = types.StringValue(organization.Name)
-	plan.CreatedOn = types.StringValue(organization.CreatedOn)
+	plan.CreatedOn = types.StringValue(organization.CreatedOn.Format(time.RFC3339))
 	plan.ThemeCode = types.StringValue(organization.ColorScheme)
 
 	// Handle optional values
@@ -384,5 +401,64 @@ func (r *OrganizationResource) Delete(ctx context.Context, req resource.DeleteRe
 }
 
 func (r *OrganizationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("code"), req, resp)
+	// Get the organization by code
+	organization, err := r.client.Get(ctx, req.ID)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Organization",
+			fmt.Sprintf("Could not read organization code %s: %s", req.ID, err),
+		)
+		return
+	}
+
+	// Create a new state
+	var state OrganizationResourceModel
+
+	// Set known values
+	state.ID = types.StringValue(organization.Code)
+	state.Code = types.StringValue(organization.Code)
+	state.Name = types.StringValue(organization.Name)
+	state.CreatedOn = types.StringValue(organization.CreatedOn.Format(time.RFC3339))
+	state.ThemeCode = types.StringValue(organization.ColorScheme)
+
+	// Handle optional values
+	if organization.Handle != nil {
+		state.Handle = types.StringValue(*organization.Handle)
+	} else {
+		state.Handle = types.StringNull()
+	}
+
+	if organization.ExternalID != nil {
+		state.ExternalID = types.StringValue(*organization.ExternalID)
+	} else {
+		state.ExternalID = types.StringNull()
+	}
+
+	if organization.BackgroundColor != nil {
+		state.BackgroundColor = types.StringValue(organization.BackgroundColor.Hex)
+	} else {
+		state.BackgroundColor = types.StringNull()
+	}
+
+	if organization.ButtonColor != nil {
+		state.ButtonColor = types.StringValue(organization.ButtonColor.Hex)
+	} else {
+		state.ButtonColor = types.StringNull()
+	}
+
+	if organization.ButtonTextColor != nil {
+		state.ButtonTextColor = types.StringValue(organization.ButtonTextColor.Hex)
+	} else {
+		state.ButtonTextColor = types.StringNull()
+	}
+
+	if organization.LinkColor != nil {
+		state.LinkColor = types.StringValue(organization.LinkColor.Hex)
+	} else {
+		state.LinkColor = types.StringNull()
+	}
+
+	// Set the state
+	diags := resp.State.Set(ctx, &state)
+	resp.Diagnostics.Append(diags...)
 } 

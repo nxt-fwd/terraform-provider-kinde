@@ -6,8 +6,8 @@ package provider
 import (
 	"context"
 
-	"github.com/axatol/kinde-go/api/applications"
-	"github.com/axatol/terraform-provider-kinde/internal/serde"
+	"github.com/nxt-fwd/kinde-go/api/applications"
+	"github.com/nxt-fwd/terraform-provider-kinde/internal/serde"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )

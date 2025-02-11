@@ -1,16 +1,16 @@
-module github.com/axatol/terraform-provider-kinde
+module github.com/nxt-fwd/terraform-provider-kinde
 
 go 1.23.0
 
 require (
-	github.com/axatol/kinde-go v0.0.4
 	github.com/hashicorp/terraform-plugin-framework v1.11.0
 	github.com/hashicorp/terraform-plugin-go v0.23.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-testing v1.10.0
+	github.com/nxt-fwd/kinde-go v0.0.6
 )
 
-replace github.com/axatol/kinde-go => ../kinde-go
+replace github.com/nxt-fwd/kinde-go => ../kinde-go
 
 require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2 // indirect

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/axatol/kinde-go"
-	"github.com/axatol/kinde-go/api/users"
+	"github.com/nxt-fwd/kinde-go"
+	"github.com/nxt-fwd/kinde-go/api/users"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
