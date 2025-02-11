@@ -15,17 +15,25 @@ func TestAccAPIDataSource(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: `
-				data "kinde_api" "test" {
-					id = "3890a3a1b4a145bd87be0b407ea39345"
-				}
-				`,
+				Config: testAccAPIDataSourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.kinde_api.test", "id", "3890a3a1b4a145bd87be0b407ea39345"),
-					resource.TestCheckResourceAttr("data.kinde_api.test", "name", "Terraform Acceptance Example API"),
-					resource.TestCheckResourceAttr("data.kinde_api.test", "audience", "https://registry.terraform.io/providers/axatol/kinde"),
+					resource.TestCheckResourceAttr("data.kinde_api.test", "name", "Terraform Acceptance Test API"),
+					resource.TestCheckResourceAttr("data.kinde_api.test", "audience", "https://registry.terraform.io/providers/nxt-fwd/kinde"),
 				),
 			},
 		},
 	})
+}
+
+func testAccAPIDataSourceConfig() string {
+	return `
+resource "kinde_api" "test" {
+	name     = "Terraform Acceptance Test API"
+	audience = "https://registry.terraform.io/providers/nxt-fwd/kinde"
+}
+
+data "kinde_api" "test" {
+	id = kinde_api.test.id
+}
+`
 }

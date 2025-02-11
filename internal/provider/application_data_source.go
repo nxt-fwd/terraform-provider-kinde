@@ -7,20 +7,21 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/axatol/kinde-go"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/nxt-fwd/kinde-go"
+	"github.com/nxt-fwd/kinde-go/api/applications"
 )
 
-var _ datasource.DataSource = (*ApplicationDataSource)(nil)
+var _ datasource.DataSource = &ApplicationDataSource{}
 
 func NewApplicationDataSource() datasource.DataSource {
 	return &ApplicationDataSource{}
 }
 
 type ApplicationDataSource struct {
-	client *kinde.Client
+	client *applications.Client
 }
 
 func (d *ApplicationDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -29,36 +30,29 @@ func (d *ApplicationDataSource) Metadata(ctx context.Context, req datasource.Met
 
 func (d *ApplicationDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Applications facilitates the interface for users to authenticate against. See [documentation](https://docs.kinde.com/build/applications/about-applications/) for more details.",
-
+		Description: "Fetches a Kinde application.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				MarkdownDescription: "ID of the Application",
-				Required:            true,
+				Description: "The unique identifier of the application.",
+				Required:    true,
 			},
 			"name": schema.StringAttribute{
-				MarkdownDescription: "Name of the Application.",
-				Computed:            true,
+				Description: "The name of the application.",
+				Computed:    true,
 			},
 			"type": schema.StringAttribute{
-				MarkdownDescription: "Type of the application.",
-				Computed:            true,
+				Description: "The type of the application (reg, spa, or m2m).",
+				Computed:    true,
 			},
 			"client_id": schema.StringAttribute{
-				MarkdownDescription: "Client id of the application.",
-				Computed:            true,
+				Description: "The client ID of the application.",
+				Computed:    true,
 			},
 			"client_secret": schema.StringAttribute{
-				MarkdownDescription: "Client secret of the application. Not available for SPA type applications.",
-				Computed:            true,
-				Sensitive:           true,
+				Description: "The client secret of the application.",
+				Computed:    true,
+				Sensitive:   true,
 			},
-			// we can't get these from the api
-			// login_uri
-			// homepage_uri
-			// language_key
-			// logout_uris
-			// redirect_uris
 		},
 	}
 }
@@ -74,32 +68,34 @@ func (d *ApplicationDataSource) Configure(ctx context.Context, req datasource.Co
 			"Unexpected Data Source Configure Type",
 			fmt.Sprintf("Expected *kinde.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 
-	d.client = client
+	d.client = client.Applications
 }
 
 func (d *ApplicationDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var config ApplicationDataSourceModel
-	if resp.Diagnostics.Append(req.Config.Get(ctx, &config)...); resp.Diagnostics.HasError() {
+	var state ApplicationDataSourceModel
+	diags := req.Config.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resource := expandApplicationDataSourceModel(config)
-
-	tflog.Debug(ctx, "Reading Application", map[string]any{"id": resource.ID})
-
-	resource, err := d.client.GetApplication(ctx, resource.ID)
+	app, err := d.client.Get(ctx, state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Failed to get Application", err.Error())
+		resp.Diagnostics.AddError(
+			"Error Reading Application",
+			fmt.Sprintf("Could not read application ID %s: %s", state.ID.ValueString(), err),
+		)
 		return
 	}
 
-	tflog.Debug(ctx, "Read Application", map[string]any{"resource": resource})
+	state.Name = types.StringValue(app.Name)
+	state.Type = types.StringValue(string(app.Type))
+	state.ClientID = types.StringValue(app.ClientID)
+	state.ClientSecret = types.StringValue(app.ClientSecret)
 
-	state := flattenApplicationDataSource(resource)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	diags = resp.State.Set(ctx, &state)
+	resp.Diagnostics.Append(diags...)
 }

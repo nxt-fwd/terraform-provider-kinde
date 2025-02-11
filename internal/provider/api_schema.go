@@ -4,25 +4,26 @@
 package provider
 
 import (
-	"github.com/axatol/kinde-go"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/nxt-fwd/kinde-go/api/apis"
 )
 
 type APIResourceModel struct {
-	ID       types.String `tfsdk:"id"`
-	Name     types.String `tfsdk:"name"`
-	Audience types.String `tfsdk:"audience"`
+	ID              types.String `tfsdk:"id"`
+	Name            types.String `tfsdk:"name"`
+	Audience        types.String `tfsdk:"audience"`
+	IsManagementAPI types.Bool   `tfsdk:"is_management_api"`
 }
 
-func expandAPIResourceModel(model APIResourceModel) *kinde.API {
-	return &kinde.API{
+func expandAPIResourceModel(model APIResourceModel) *apis.API {
+	return &apis.API{
 		ID:       model.ID.ValueString(),
 		Name:     model.Name.ValueString(),
 		Audience: model.Audience.ValueString(),
 	}
 }
 
-func flattenAPIResource(resource *kinde.API) APIResourceModel {
+func flattenAPIResource(resource *apis.API) APIResourceModel {
 	return APIResourceModel{
 		ID:       types.StringValue(resource.ID),
 		Name:     types.StringValue(resource.Name),
@@ -36,15 +37,15 @@ type APIDataSourceModel struct {
 	Audience types.String `tfsdk:"audience"`
 }
 
-func expandAPIDataSourceModel(model APIDataSourceModel) *kinde.API {
-	return &kinde.API{
+func expandAPIDataSourceModel(model APIDataSourceModel) *apis.API {
+	return &apis.API{
 		ID:       model.ID.ValueString(),
 		Name:     model.Name.ValueString(),
 		Audience: model.Audience.ValueString(),
 	}
 }
 
-func flattenAPIDataSource(resource *kinde.API) APIDataSourceModel {
+func flattenAPIDataSource(resource *apis.API) APIDataSourceModel {
 	return APIDataSourceModel{
 		ID:       types.StringValue(resource.ID),
 		Name:     types.StringValue(resource.Name),
