@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/nxt-fwd/kinde-go/api/roles"
 	"github.com/nxt-fwd/terraform-provider-kinde/internal/serde"
@@ -17,7 +18,7 @@ type RoleResourceModel struct {
 	Name        types.String `tfsdk:"name"`
 	Key         types.String `tfsdk:"key"`
 	Description types.String `tfsdk:"description"`
-	Permissions types.List   `tfsdk:"permissions"`
+	Permissions types.Set    `tfsdk:"permissions"`
 }
 
 //nolint:unused
@@ -30,34 +31,39 @@ func expandRoleResourceModel(data RoleResourceModel) roles.Role {
 	}
 }
 
-func expandRoleCreateParams(data RoleResourceModel) roles.CreateParams {
+func expandRoleCreateParams(plan RoleResourceModel) roles.CreateParams {
 	return roles.CreateParams{
-		Name:        data.Name.ValueString(),
-		Key:         data.Key.ValueString(),
-		Description: data.Description.ValueString(),
+		Name:        plan.Name.ValueString(),
+		Key:         plan.Key.ValueString(),
+		Description: plan.Description.ValueString(),
 	}
 }
 
-func expandRoleUpdateParams(data RoleResourceModel) roles.UpdateParams {
+func expandRoleUpdateParams(plan RoleResourceModel) roles.UpdateParams {
 	return roles.UpdateParams{
-		Name:        data.Name.ValueString(),
-		Key:         data.Key.ValueString(),
-		Description: data.Description.ValueString(),
+		Name:        plan.Name.ValueString(),
+		Description: plan.Description.ValueString(),
 	}
 }
 
-func flattenRoleResource(ctx context.Context, resource *roles.Role, permissions []string) (RoleResourceModel, error) {
-	permissionsList, diags := serde.FlattenStringList(ctx, permissions)
-	if diags.HasError() {
-		return RoleResourceModel{}, fmt.Errorf("failed to flatten permissions: %v", diags)
+func flattenRoleResource(ctx context.Context, role *roles.Role, permissions []string) (RoleResourceModel, error) {
+	var permissionsSet types.Set
+	if len(permissions) > 0 {
+		var diags diag.Diagnostics
+		permissionsSet, diags = types.SetValueFrom(ctx, types.StringType, permissions)
+		if diags.HasError() {
+			return RoleResourceModel{}, fmt.Errorf("failed to flatten permissions: %v", diags)
+		}
+	} else {
+		permissionsSet = types.SetNull(types.StringType)
 	}
 
 	return RoleResourceModel{
-		ID:          types.StringValue(resource.ID),
-		Name:        types.StringValue(resource.Name),
-		Key:         types.StringValue(resource.Key),
-		Description: types.StringValue(resource.Description),
-		Permissions: permissionsList,
+		ID:          types.StringValue(role.ID),
+		Name:        types.StringValue(role.Name),
+		Key:         types.StringValue(role.Key),
+		Description: types.StringValue(role.Description),
+		Permissions: permissionsSet,
 	}, nil
 }
 

@@ -22,11 +22,10 @@ Applications facilitates the interface for users to authenticate against. See [d
 
 ### Optional
 
-- `homepage_uri` (String) Homepage uri of the application
-- `language_key` (String) Language key of the application
-- `login_uri` (String) Login uri of the application
-- `logout_uris` (List of String) Logout uris of the application
-- `redirect_uris` (List of String) Redirect uris of the application
+- `homepage_uri` (String) The homepage URI of the application.
+- `login_uri` (String) The login URI of the application.
+- `logout_uris` (List of String) The logout URIs of the application.
+- `redirect_uris` (List of String) The redirect URIs of the application.
 
 ### Read-Only
 

@@ -190,14 +190,26 @@ func TestAccIntegrationRoleManagement(t *testing.T) {
 					resource.TestCheckResourceAttrSet("kinde_role.complex", "id"),
 					resource.TestCheckResourceAttr("kinde_permission.first", "name", testID+"-permission1"),
 					resource.TestCheckResourceAttr("kinde_permission.second", "name", testID+"-permission2"),
+					resource.TestCheckResourceAttr("kinde_role.complex", "permissions.#", "2"),
+					// Add a check to verify the role was created successfully
+					resource.TestCheckResourceAttrSet("kinde_role.complex", "id"),
 				),
 			},
-			// Step 2: Update role permissions
+			// Step 2: Import to verify state
+			{
+				ResourceName:      "kinde_role.complex",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Step 3: Update role permissions - remove one and add another
 			{
 				Config: testAccIntegrationRoleConfigUpdate(testID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("kinde_role.complex", "name", testID+"-role-updated"),
+					resource.TestCheckResourceAttr("kinde_permission.first", "name", testID+"-permission1"),
+					resource.TestCheckResourceAttr("kinde_permission.second", "name", testID+"-permission2"),
 					resource.TestCheckResourceAttr("kinde_permission.third", "name", testID+"-permission3"),
+					resource.TestCheckResourceAttr("kinde_role.complex", "permissions.#", "2"),
 				),
 			},
 		},
@@ -236,6 +248,13 @@ resource "kinde_permission" "first" {
 	name = "%[1]s-permission1"
 	key  = "%[1]s_permission1"
 	description = "First test permission"
+}
+
+# Keep second permission but don't use it in role
+resource "kinde_permission" "second" {
+	name = "%[1]s-permission2"
+	key  = "%[1]s_permission2"
+	description = "Second test permission"
 }
 
 resource "kinde_permission" "third" {
