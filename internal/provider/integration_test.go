@@ -131,7 +131,6 @@ resource "kinde_user" "test" {
 resource "kinde_organization_user" "test" {
 	organization_code = kinde_organization.test.code
 	user_id          = kinde_user.test.id
-	roles            = []
 }
 `, name)
 }
@@ -169,7 +168,6 @@ resource "kinde_user" "test" {
 resource "kinde_organization_user" "test" {
 	organization_code = kinde_organization.test.code
 	user_id          = kinde_user.test.id
-	roles            = []
 }
 `, name)
 }
@@ -330,13 +328,11 @@ resource "kinde_user" "multi_org" {
 resource "kinde_organization_user" "first" {
 	organization_code = kinde_organization.first.code
 	user_id          = kinde_user.multi_org.id
-	roles            = []
 }
 
 resource "kinde_organization_user" "second" {
 	organization_code = kinde_organization.second.code
 	user_id          = kinde_user.multi_org.id
-	roles            = []
 }
 `, name)
 }
@@ -365,13 +361,11 @@ resource "kinde_user" "multi_org" {
 resource "kinde_organization_user" "first" {
 	organization_code = kinde_organization.first.code
 	user_id          = kinde_user.multi_org.id
-	roles            = []
 }
 
 resource "kinde_organization_user" "second" {
 	organization_code = kinde_organization.second.code
 	user_id          = kinde_user.multi_org.id
-	roles            = []
 }
 `, name)
 }
