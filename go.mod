@@ -9,7 +9,7 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.26.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-testing v1.11.0
-	github.com/nxt-fwd/kinde-go v0.0.7-0.20250220100325-dffb8425da08
+	github.com/nxt-fwd/kinde-go v0.0.8
 )
 
 // replace github.com/nxt-fwd/kinde-go => ../kinde-go

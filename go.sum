@@ -130,8 +130,8 @@ github.com/mitchellh/mapstructure v1.5.0 h1:jeMsZIYE/09sWLaz43PL7Gy6RuMjD2eJVyua
 github.com/mitchellh/mapstructure v1.5.0/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
 github.com/mitchellh/reflectwalk v1.0.2 h1:G2LzWKi524PWgd3mLHV8Y5k7s6XUvT0Gef6zxSIeXaQ=
 github.com/mitchellh/reflectwalk v1.0.2/go.mod h1:mSTlrgnPZtwu0c4WaC2kGObEpuNDbx0jmZXqmk4esnw=
-github.com/nxt-fwd/kinde-go v0.0.7-0.20250220100325-dffb8425da08 h1:jqCBjtilmLDgd4fBPLkI46+yrETiCQ4cnBPt4z21LSg=
-github.com/nxt-fwd/kinde-go v0.0.7-0.20250220100325-dffb8425da08/go.mod h1:ssJOpEKLmUL4vOGjmJzniHcAd8WsI8N0pt0pxczNzQk=
+github.com/nxt-fwd/kinde-go v0.0.8 h1:QRqMzHxyippSswogaN5A1LcXWdTSN0Y4DQd2fDCa1mU=
+github.com/nxt-fwd/kinde-go v0.0.8/go.mod h1:NhzDvsLlbocHnWr1F0MULfZLd26TrecuVMx2jJ9CQ1Q=
 github.com/nyaruka/phonenumbers v1.5.0 h1:0M+Gd9zl53QC4Nl5z1Yj1O/zPk2XXBUwR/vlzdXSJv4=
 github.com/nyaruka/phonenumbers v1.5.0/go.mod h1:gv+CtldaFz+G3vHHnasBSirAi3O2XLqZzVWz4V1pl2E=
 github.com/oklog/run v1.0.0 h1:Ru7dDtJNOyC66gQ5dQmaCa0qIsAUFY3sFpK1Xk8igrw=
