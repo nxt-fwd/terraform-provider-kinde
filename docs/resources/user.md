@@ -3,12 +3,12 @@
 page_title: "kinde_user Resource - kinde"
 subcategory: ""
 description: |-
-  Manages a Kinde user.
+  Manages a user within a Kinde organization.
 ---
 
 # kinde_user (Resource)
 
-Manages a Kinde user.
+Manages a user within a Kinde organization.
 
 
 
@@ -17,19 +17,19 @@ Manages a Kinde user.
 
 ### Required
 
-- `identities` (Attributes List) Identities for the user (email, username, phone, etc.). (see [below for nested schema](#nestedatt--identities))
+- `first_name` (String) The first name of the user.
+- `identities` (Attributes Set) Identities for the user (email, username, phone, etc.). (see [below for nested schema](#nestedatt--identities))
+- `last_name` (String) The last name of the user.
 
 ### Optional
 
-- `first_name` (String) The first name of the user.
 - `is_suspended` (Boolean) Whether the user is suspended.
-- `last_name` (String) The last name of the user.
 - `organization_code` (String) The code of the organization the user belongs to.
 
 ### Read-Only
 
 - `created_on` (String) The timestamp when the user was created.
-- `id` (String) The unique identifier of the user.
+- `id` (String) The unique identifier for the user.
 - `updated_on` (String) The timestamp when the user was last updated.
 
 <a id="nestedatt--identities"></a>
