@@ -30,6 +30,41 @@ type OrganizationUserResource struct {
 	client *organizations.Client
 }
 
+// Add custom plan modifier for empty lists
+type emptyListModifier struct{}
+
+func (m emptyListModifier) Description(ctx context.Context) string {
+	return "Treats null and empty lists as equivalent."
+}
+
+func (m emptyListModifier) MarkdownDescription(ctx context.Context) string {
+	return "Treats null and empty lists as equivalent."
+}
+
+func (m emptyListModifier) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
+	// If the plan is null and the state has an empty list, keep the empty list
+	if req.PlanValue.IsNull() && !req.StateValue.IsNull() && len(req.StateValue.Elements()) == 0 {
+		emptyList, diags := types.ListValueFrom(ctx, types.StringType, []string{})
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		resp.PlanValue = emptyList
+		return
+	}
+
+	// If the plan is null and config has an empty list, use the empty list
+	if req.PlanValue.IsNull() && !req.ConfigValue.IsNull() && len(req.ConfigValue.Elements()) == 0 {
+		emptyList, diags := types.ListValueFrom(ctx, types.StringType, []string{})
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		resp.PlanValue = emptyList
+		return
+	}
+}
+
 func (r *OrganizationUserResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_organization_user"
 }
@@ -163,18 +198,22 @@ func (r *OrganizationUserResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	// Only update roles state if they weren't specified in the configuration
-	if state.Roles.IsNull() {
-		roleIDs := make([]string, len(roles))
-		for i, role := range roles {
-			roleIDs[i] = role.ID
-		}
+	// Convert roles to IDs
+	roleIDs := make([]string, len(roles))
+	for i, role := range roles {
+		roleIDs[i] = role.ID
+	}
 
-		state.Roles, diags = types.ListValueFrom(ctx, types.StringType, roleIDs)
+	// If there are roles, set them in state, otherwise set to null
+	if len(roleIDs) > 0 {
+		rolesList, diags := types.ListValueFrom(ctx, types.StringType, roleIDs)
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		state.Roles = rolesList
+	} else {
+		state.Roles = types.ListNull(types.StringType)
 	}
 
 	diags = resp.State.Set(ctx, &state)

@@ -110,6 +110,8 @@ func (p *KindeProvider) Resources(ctx context.Context) []func() resource.Resourc
 	return []func() resource.Resource{
 		NewAPIResource,
 		NewApplicationResource,
+		NewApplicationConnectionResource,
+		NewConnectionResource,
 		NewOrganizationResource,
 		NewOrganizationUserResource,
 		NewRoleResource,
@@ -123,6 +125,7 @@ func (p *KindeProvider) DataSources(ctx context.Context) []func() datasource.Dat
 	return []func() datasource.DataSource{
 		NewAPIDataSource,
 		NewApplicationDataSource,
+		NewConnectionsDataSource,
 	}
 }
 

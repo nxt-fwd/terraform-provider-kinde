@@ -54,3 +54,105 @@ func TestAccApplicationResource(t *testing.T) {
 		},
 	})
 }
+
+func TestAccApplicationResource_Connections(t *testing.T) {
+	testID := acctest.RandomWithPrefix("tfacc")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationResourceConfig_WithConnections(testID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("kinde_application.test", "name", testID),
+					resource.TestCheckResourceAttr("kinde_application.test", "type", "reg"),
+					resource.TestCheckResourceAttrSet("kinde_application.test", "id"),
+					resource.TestCheckResourceAttrSet("kinde_application.test", "client_id"),
+					resource.TestCheckResourceAttrSet("kinde_application.test", "client_secret"),
+					// Check that both connections exist and are linked
+					resource.TestCheckResourceAttrSet("kinde_application_connection.password", "id"),
+					resource.TestCheckResourceAttrSet("kinde_application_connection.otp", "id"),
+					// Verify the application IDs match
+					resource.TestCheckResourceAttrPair(
+						"kinde_application_connection.password", "application_id",
+						"kinde_application.test", "id",
+					),
+					resource.TestCheckResourceAttrPair(
+						"kinde_application_connection.otp", "application_id",
+						"kinde_application.test", "id",
+					),
+				),
+			},
+		},
+	})
+}
+
+func testAccApplicationResourceConfig_WithConnections(name string) string {
+	return fmt.Sprintf(`
+data "kinde_connections" "builtin" {
+	filter = "builtin"
+}
+
+resource "kinde_application" "test" {
+	name = %[1]q
+	type = "reg"
+}
+
+resource "kinde_application_connection" "password" {
+	application_id = kinde_application.test.id
+	connection_id  = data.kinde_connections.builtin.connections[index(data.kinde_connections.builtin.connections[*].strategy, "username:password")].id
+}
+
+resource "kinde_application_connection" "otp" {
+	application_id = kinde_application.test.id
+	connection_id  = data.kinde_connections.builtin.connections[index(data.kinde_connections.builtin.connections[*].strategy, "username:otp")].id
+}
+`, name)
+}
+
+func testAccApplicationResourceConfig_ConnectionSetup(name string) string {
+	return fmt.Sprintf(`
+resource "kinde_connection" "oauth2" {
+	name         = "%[1]s-conn"
+	display_name = "Test OAuth2 Connection"
+	strategy     = "oauth2:google"
+	options = {
+		client_id     = "test-client-id"
+		client_secret = "test-client-secret"
+	}
+}
+`, name)
+}
+
+func testAccApplicationResourceConfig_ReducedConnections(name string) string {
+	return fmt.Sprintf(`
+resource "kinde_connection" "oauth2" {
+	name         = "%[1]s-conn"
+	display_name = "Test OAuth2 Connection"
+	strategy     = "oauth2:google"
+	options = {
+		client_id     = "test-client-id"
+		client_secret = "test-client-secret"
+	}
+}
+
+resource "kinde_application" "test" {
+	name = "%[1]s-app"
+	type = "reg"
+	connections = [
+		{
+			id = kinde_connection.oauth2.id
+		}
+	]
+
+	lifecycle {
+		ignore_changes = [
+			connections[*].name,
+			connections[*].display_name,
+			connections[*].strategy,
+		]
+	}
+}
+`, name)
+}

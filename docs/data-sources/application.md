@@ -3,12 +3,12 @@
 page_title: "kinde_application Data Source - kinde"
 subcategory: ""
 description: |-
-  Applications facilitates the interface for users to authenticate against. See documentation https://docs.kinde.com/build/applications/about-applications/ for more details.
+  Fetches a Kinde application.
 ---
 
 # kinde_application (Data Source)
 
-Applications facilitates the interface for users to authenticate against. See [documentation](https://docs.kinde.com/build/applications/about-applications/) for more details.
+Fetches a Kinde application.
 
 ## Example Usage
 
@@ -23,11 +23,11 @@ data "kinde_application" "example" {
 
 ### Required
 
-- `id` (String) ID of the Application
+- `id` (String) The unique identifier of the application.
 
 ### Read-Only
 
-- `client_id` (String) Client id of the application.
-- `client_secret` (String, Sensitive) Client secret of the application. Not available for SPA type applications.
-- `name` (String) Name of the Application.
-- `type` (String) Type of the application.
+- `client_id` (String) The client ID of the application.
+- `client_secret` (String, Sensitive) The client secret of the application.
+- `name` (String) The name of the application.
+- `type` (String) The type of the application (reg, spa, or m2m).

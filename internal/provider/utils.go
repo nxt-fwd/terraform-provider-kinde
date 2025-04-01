@@ -2,6 +2,7 @@ package provider
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -14,4 +15,14 @@ func splitID(id string, expectedParts int, format string) ([]string, error) {
 		return nil, fmt.Errorf("invalid ID format. Expected format: %s", format)
 	}
 	return parts, nil
+}
+
+func sortStringSlice(slice []string) []string {
+	if slice == nil {
+		return nil
+	}
+	sorted := make([]string, len(slice))
+	copy(sorted, slice)
+	sort.Strings(sorted)
+	return sorted
 }

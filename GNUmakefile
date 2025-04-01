@@ -23,7 +23,12 @@ vet:
 # Generate documentation
 .PHONY: docs
 docs:
-	go generate ./...
+	tfplugindocs generate --provider-name kinde
+
+# Validate documentation
+.PHONY: docs-validate
+docs-validate:
+	tfplugindocs validate --provider-name kinde
 
 # Run golangci-lint
 .PHONY: lint
@@ -32,7 +37,7 @@ lint:
 
 # Build provider
 .PHONY: build
-build:
+build: docs-validate
 	go build -v ./...
 
 # Install provider
@@ -47,7 +52,7 @@ clean:
 
 # Run all pre-commit checks
 .PHONY: all
-all: fmt vet lint test
+all: fmt vet lint docs-validate test
 
 # Version detection
 VERSION = $(shell git describe --tags --match 'v*' 2>/dev/null || echo "v0.0.0")
@@ -63,4 +68,4 @@ coverage:
 # some resources might remain. These should be manually cleaned up in
 # your Kinde account.
 
-.PHONY: default build clean coverage docs all
+.PHONY: default build clean coverage docs docs-validate all
