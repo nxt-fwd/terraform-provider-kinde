@@ -31,6 +31,18 @@ type ApplicationResource struct {
 	client *applications.Client
 }
 
+type applicationResourceModel struct {
+	ID           types.String `tfsdk:"id"`
+	Name         types.String `tfsdk:"name"`
+	Type         types.String `tfsdk:"type"`
+	ClientID     types.String `tfsdk:"client_id"`
+	ClientSecret types.String `tfsdk:"client_secret"`
+	LoginURI     types.String `tfsdk:"login_uri"`
+	HomepageURI  types.String `tfsdk:"homepage_uri"`
+	LogoutURIs   types.List   `tfsdk:"logout_uris"`
+	RedirectURIs types.List   `tfsdk:"redirect_uris"`
+}
+
 func (r *ApplicationResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_application"
 }
@@ -120,28 +132,15 @@ func (r *ApplicationResource) Configure(ctx context.Context, req resource.Config
 }
 
 func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	tflog.Debug(ctx, "Starting application creation")
+	var plan applicationResourceModel
 
-	var plan ApplicationResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if r.client == nil {
-		resp.Diagnostics.AddError(
-			"Client Not Configured",
-			"Expected configured client. Please report this issue to the provider developers.",
-		)
-		return
-	}
-
-	tflog.Debug(ctx, "Creating application with params", map[string]interface{}{
-		"name": plan.Name.ValueString(),
-		"type": plan.Type.ValueString(),
-	})
-
+	// Create application with required fields
 	createParams := applications.CreateParams{
 		Name: plan.Name.ValueString(),
 		Type: applications.Type(plan.Type.ValueString()),
@@ -156,15 +155,12 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	tflog.Debug(ctx, "Application created successfully", map[string]interface{}{
-		"id": app.ID,
-	})
-
+	// Set all values from application data
 	plan.ID = types.StringValue(app.ID)
 	plan.ClientID = types.StringValue(app.ClientID)
 	plan.ClientSecret = types.StringValue(app.ClientSecret)
 
-	// Update the application with additional settings if provided
+	// Update the application with optional settings if provided
 	var logoutURIs []string
 	if !plan.LogoutURIs.IsNull() {
 		diags = plan.LogoutURIs.ElementsAs(ctx, &logoutURIs, false)
@@ -210,14 +206,14 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 		tflog.Debug(ctx, "Application updated successfully")
 	}
 
-	diags = resp.State.Set(ctx, plan)
+	diags = resp.State.Set(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 
 	tflog.Debug(ctx, "Application creation completed")
 }
 
 func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state ApplicationResourceModel
+	var state applicationResourceModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -267,40 +263,63 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan ApplicationResourceModel
+	var plan applicationResourceModel
+	var state applicationResourceModel
+
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
+	diags = req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Update basic settings if changed
 	var logoutURIs []string
-	diags = plan.LogoutURIs.ElementsAs(ctx, &logoutURIs, false)
-	resp.Diagnostics.Append(diags...)
+	if !plan.LogoutURIs.IsNull() {
+		diags = plan.LogoutURIs.ElementsAs(ctx, &logoutURIs, false)
+		resp.Diagnostics.Append(diags...)
+	}
 
 	var redirectURIs []string
-	diags = plan.RedirectURIs.ElementsAs(ctx, &redirectURIs, false)
-	resp.Diagnostics.Append(diags...)
+	if !plan.RedirectURIs.IsNull() {
+		diags = plan.RedirectURIs.ElementsAs(ctx, &redirectURIs, false)
+		resp.Diagnostics.Append(diags...)
+	}
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	updateParams := applications.UpdateParams{
-		Name:         plan.Name.ValueString(),
-		LoginURI:     plan.LoginURI.ValueString(),
-		HomepageURI:  plan.HomepageURI.ValueString(),
-		LogoutURIs:   logoutURIs,
-		RedirectURIs: redirectURIs,
-	}
+	// Only update if any of the optional fields are set
+	if true { // Always update to ensure name changes are applied
+		tflog.Debug(ctx, "Updating application settings", map[string]interface{}{
+			"id":             plan.ID.ValueString(),
+			"name":           plan.Name.ValueString(),
+			"has_login":      !plan.LoginURI.IsNull(),
+			"has_homepage":   !plan.HomepageURI.IsNull(),
+			"logout_count":   len(logoutURIs),
+			"redirect_count": len(redirectURIs),
+		})
 
-	err := r.client.Update(ctx, plan.ID.ValueString(), updateParams)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Updating Application",
-			fmt.Sprintf("Could not update application ID %s: %s", plan.ID.ValueString(), err),
-		)
-		return
+		updateParams := applications.UpdateParams{
+			Name:         plan.Name.ValueString(), // Ensure name is included in update params
+			LoginURI:     plan.LoginURI.ValueString(),
+			HomepageURI:  plan.HomepageURI.ValueString(),
+			LogoutURIs:   logoutURIs,
+			RedirectURIs: redirectURIs,
+		}
+
+		err := r.client.Update(ctx, plan.ID.ValueString(), updateParams)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error Updating Application",
+				fmt.Sprintf("Could not update application ID %s: %s", plan.ID.ValueString(), err),
+			)
+			return
+		}
+
+		tflog.Debug(ctx, "Application settings updated successfully")
 	}
 
 	diags = resp.State.Set(ctx, plan)
@@ -308,7 +327,7 @@ func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateReq
 }
 
 func (r *ApplicationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state ApplicationResourceModel
+	var state applicationResourceModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

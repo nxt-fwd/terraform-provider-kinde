@@ -58,13 +58,13 @@ func (r *UserResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				},
 			},
 			"first_name": schema.StringAttribute{
-				Description: "The first name of the user.",
-				Required:    true,
+				Description:         "The first name of the user.",
+				Required:            true,
 				MarkdownDescription: "The first name of the user.",
 			},
 			"last_name": schema.StringAttribute{
-				Description: "The last name of the user.",
-				Required:    true,
+				Description:         "The last name of the user.",
+				Required:            true,
 				MarkdownDescription: "The last name of the user.",
 			},
 			"is_suspended": schema.BoolAttribute{
@@ -133,6 +133,15 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Check if is_suspended is set to true on create, which is not allowed
+	if !plan.IsSuspended.IsNull() && plan.IsSuspended.ValueBool() {
+		resp.Diagnostics.AddError(
+			"Invalid Configuration",
+			"Setting is_suspended=true when creating a user is not supported. Create the user first, then update the is_suspended attribute.",
+		)
 		return
 	}
 
@@ -205,21 +214,6 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	// If is_suspended is set to true, update the user
-	if !plan.IsSuspended.IsNull() && plan.IsSuspended.ValueBool() {
-		updateParams := users.UpdateParams{
-			IsSuspended: &[]bool{true}[0],
-		}
-		user, err = r.client.Update(ctx, user.ID, updateParams)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error Updating User Suspension Status",
-				fmt.Sprintf("Could not update user suspension status: %s", err),
-			)
-			return
-		}
-	}
-
 	// Get the final state of the user
 	user, err = r.client.Get(ctx, user.ID)
 	if err != nil {
@@ -245,25 +239,25 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 		Type  string `tfsdk:"type"`
 		Value string `tfsdk:"value"`
 	}
-	
+
 	// Create a map of planned identity values to types for reference
 	plannedIdentityTypes := make(map[string]string)
 	for _, identity := range identities {
 		plannedIdentityTypes[identity.Value] = identity.Type
 	}
-	
+
 	for _, identity := range finalIdentities {
 		// Skip OAuth2 identities when storing in state
 		if strings.HasPrefix(identity.Type, "oauth2:") {
 			continue
 		}
-		
+
 		// Use the type from plan if available, otherwise use API type
 		identityType := identity.Type
 		if plannedType, exists := plannedIdentityTypes[identity.Name]; exists {
 			identityType = plannedType
 		}
-		
+
 		tfIdentities = append(tfIdentities, struct {
 			Type  string `tfsdk:"type"`
 			Value string `tfsdk:"value"`
@@ -272,7 +266,7 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 			Value: identity.Name,
 		})
 	}
-	
+
 	// Sort identities consistently by type and then by value
 	sort.Slice(tfIdentities, func(i, j int) bool {
 		if tfIdentities[i].Type == tfIdentities[j].Type {
@@ -302,7 +296,7 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 	} else {
 		plan.FirstName = types.StringNull()
 	}
-	
+
 	// Handle last_name: only set if it was in the plan
 	if !plan.LastName.IsNull() {
 		plan.LastName = types.StringValue(user.LastName)
@@ -410,22 +404,22 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	// Update state with user data
 	state.ID = types.StringValue(user.ID)
-	
+
 	// Handle first_name: only set if it was previously set in state
 	if !state.FirstName.IsNull() {
 		state.FirstName = types.StringValue(user.FirstName)
 	}
-	
+
 	// Handle last_name: only set if it was previously set in state
 	if !state.LastName.IsNull() {
 		state.LastName = types.StringValue(user.LastName)
 	}
-	
+
 	// Only set is_suspended in state if it was previously configured
 	if !state.IsSuspended.IsNull() {
 		state.IsSuspended = types.BoolValue(user.IsSuspended)
 	}
-	
+
 	state.CreatedOn = types.StringValue(user.CreatedOn.String())
 	state.UpdatedOn = types.StringValue(user.UpdatedOn.String())
 
@@ -484,7 +478,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	// Get the user
-	user, err := r.client.Get(ctx, plan.ID.ValueString())
+	_, err := r.client.Get(ctx, plan.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading User",
@@ -520,7 +514,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		updateParams.IsSuspended = &isSuspended
 	}
 
-	user, err = r.client.Update(ctx, plan.ID.ValueString(), updateParams)
+	_, err = r.client.Update(ctx, plan.ID.ValueString(), updateParams)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Updating User",
@@ -635,7 +629,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	// Get final state of the user
-	user, err = r.client.Get(ctx, plan.ID.ValueString())
+	user, err := r.client.Get(ctx, plan.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Updated User",
@@ -659,25 +653,25 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		Type  string `tfsdk:"type"`
 		Value string `tfsdk:"value"`
 	}
-	
+
 	// Create a map of planned identity values to types for reference
 	plannedIdentityTypes := make(map[string]string)
 	for _, identity := range plannedIdentities {
 		plannedIdentityTypes[identity.Value] = identity.Type
 	}
-	
+
 	for _, identity := range finalIdentities {
 		// Skip OAuth2 identities when storing in state
 		if strings.HasPrefix(identity.Type, "oauth2:") {
 			continue
 		}
-		
+
 		// Use the type from plan if available, otherwise use API type
 		identityType := identity.Type
 		if plannedType, exists := plannedIdentityTypes[identity.Name]; exists {
 			identityType = plannedType
 		}
-		
+
 		tfIdentities = append(tfIdentities, struct {
 			Type  string `tfsdk:"type"`
 			Value string `tfsdk:"value"`
@@ -686,7 +680,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 			Value: identity.Name,
 		})
 	}
-	
+
 	// Sort identities consistently by type and then by value
 	sort.Slice(tfIdentities, func(i, j int) bool {
 		if tfIdentities[i].Type == tfIdentities[j].Type {

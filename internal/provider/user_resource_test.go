@@ -23,19 +23,19 @@ func TestUserResource_FiltersOAuthIdentities(t *testing.T) {
 		{Type: "oauth2:github", Name: "githubuser"},
 		{Type: "phone", Name: "+1234567890"},
 	}
-	
+
 	// Create a test state with the identities
 	var tfIdentities []struct {
 		Type  string `tfsdk:"type"`
 		Value string `tfsdk:"value"`
 	}
-	
+
 	// Filter out OAuth identities (simulating what our Read function does)
 	for _, identity := range identities {
 		if strings.HasPrefix(identity.Type, "oauth2:") {
 			continue
 		}
-		
+
 		tfIdentities = append(tfIdentities, struct {
 			Type  string `tfsdk:"type"`
 			Value string `tfsdk:"value"`
@@ -44,30 +44,30 @@ func TestUserResource_FiltersOAuthIdentities(t *testing.T) {
 			Value: identity.Name,
 		})
 	}
-	
+
 	// Verify the filtering worked correctly
 	if len(tfIdentities) != 3 {
 		t.Errorf("Expected 3 non-OAuth identities, got %d", len(tfIdentities))
 	}
-	
+
 	// Check that no OAuth identities remain
 	for _, identity := range tfIdentities {
 		if strings.HasPrefix(identity.Type, "oauth2:") {
 			t.Errorf("OAuth identity was not filtered out: %s", identity.Type)
 		}
 	}
-	
+
 	// Verify the specific identity types that should remain
 	expectedTypes := map[string]bool{
 		"email":    false,
 		"username": false,
 		"phone":    false,
 	}
-	
+
 	for _, identity := range tfIdentities {
 		expectedTypes[identity.Type] = true
 	}
-	
+
 	for idType, found := range expectedTypes {
 		if !found {
 			t.Errorf("Expected identity type %s was not found after filtering", idType)
@@ -419,7 +419,7 @@ func TestUserResource_SortsIdentitiesConsistently(t *testing.T) {
 		{Type: "phone", Value: "+1234567890"},
 		{Type: "username", Value: "testuser"},
 	}
-	
+
 	identitiesOrder2 := []struct {
 		Type  string `tfsdk:"type"`
 		Value string `tfsdk:"value"`
@@ -428,7 +428,7 @@ func TestUserResource_SortsIdentitiesConsistently(t *testing.T) {
 		{Type: "username", Value: "testuser"},
 		{Type: "email", Value: "test@example.com"},
 	}
-	
+
 	// Sort both sets of identities
 	sort.Slice(identitiesOrder1, func(i, j int) bool {
 		if identitiesOrder1[i].Type == identitiesOrder1[j].Type {
@@ -436,29 +436,29 @@ func TestUserResource_SortsIdentitiesConsistently(t *testing.T) {
 		}
 		return identitiesOrder1[i].Type < identitiesOrder1[j].Type
 	})
-	
+
 	sort.Slice(identitiesOrder2, func(i, j int) bool {
 		if identitiesOrder2[i].Type == identitiesOrder2[j].Type {
 			return identitiesOrder2[i].Value < identitiesOrder2[j].Value
 		}
 		return identitiesOrder2[i].Type < identitiesOrder2[j].Type
 	})
-	
+
 	// Verify that both sets are now in the same order
 	if len(identitiesOrder1) != len(identitiesOrder2) {
-		t.Errorf("Sorted identity sets have different lengths: %d vs %d", 
+		t.Errorf("Sorted identity sets have different lengths: %d vs %d",
 			len(identitiesOrder1), len(identitiesOrder2))
 		return
 	}
-	
+
 	for i := range identitiesOrder1 {
-		if identitiesOrder1[i].Type != identitiesOrder2[i].Type || 
-		   identitiesOrder1[i].Value != identitiesOrder2[i].Value {
-			t.Errorf("Sorted identities differ at position %d: %+v vs %+v", 
+		if identitiesOrder1[i].Type != identitiesOrder2[i].Type ||
+			identitiesOrder1[i].Value != identitiesOrder2[i].Value {
+			t.Errorf("Sorted identities differ at position %d: %+v vs %+v",
 				i, identitiesOrder1[i], identitiesOrder2[i])
 		}
 	}
-	
+
 	// Verify the specific order (email should come before phone and username)
 	if len(identitiesOrder1) >= 3 {
 		if identitiesOrder1[0].Type != "email" {
@@ -562,4 +562,4 @@ resource "kinde_user" "test" {
   ]
 }
 `, firstName, lastName, isSuspended, email, phone)
-} 
+}

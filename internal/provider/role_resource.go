@@ -196,7 +196,7 @@ func (r *RoleResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	// Sort permissions without modifying original
 	sortedPerms := sortPermissions(role.Permissions)
-	
+
 	// If no permissions are returned, explicitly set to null
 	var permissionsSet types.Set
 	if len(sortedPerms) > 0 {
@@ -339,7 +339,7 @@ func (r *RoleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	// Sort permissions without modifying original before setting state
 	sortedPerms := sortPermissions(role.Permissions)
-	
+
 	// If no permissions are returned, explicitly set to null
 	var permissionsSet types.Set
 	if len(sortedPerms) > 0 {
